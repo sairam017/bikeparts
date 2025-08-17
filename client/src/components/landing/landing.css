@@ -1,0 +1,15 @@
+.lp-wrap{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0f172a}
+.lp-header{display:flex;align-items:center;gap:1rem;padding:.75rem 1rem;background:#0a2aa7;color:#fff}
+.lp-brand{font-weight:800;font-size:1.1rem}
+.lp-search{display:flex;gap:.5rem;flex:1;align-items:center}
+.lp-cats{border:0;background:#fff;color:#0f172a;border-radius:8px;padding:.5rem .6rem}
+.lp-input{flex:1;border-radius:8px;border:0;padding:.6rem .75rem}
+.lp-btn{background:#00a2ff;color:#fff;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:700}
+.lp-actions{display:flex;gap:.5rem}
+.lp-link{background:transparent;border:2px solid #fff;color:#fff;padding:.5rem .8rem;border-radius:8px;font-weight:700}
+.lp-hero{background:linear-gradient(90deg,#0a2aa7 0%,#0e5bd8 100%);height:44vh;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center}
+.lp-hero-content h1{font-size:2.2rem;margin:.25rem 0}
+.lp-hero-content p{opacity:.9;margin:.25rem 0 1rem}
+.lp-cta-btn{background:#ffb703;color:#0f172a;border:0;border-radius:8px;padding:.7rem 1.1rem;font-weight:800}
+.lp-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;padding:1rem}
+.lp-feature{border:2px solid #0a2aa7;border-radius:10px;padding:1rem;text-align:center;font-weight:700;color:#0a2aa7;background:#fff}

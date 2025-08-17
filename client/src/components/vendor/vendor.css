@@ -1,0 +1,5 @@
+.vendor-bg{min-height:100vh;background:#ffffff;color:#0b2e68}
+.vendor-card{background:#ffffff;padding:1rem;border-radius:12px;border:2px solid #1d4ed8;box-shadow:0 8px 20px rgba(29,78,216,.08)}
+.btn-primary{padding:.55rem .9rem;border-radius:8px;border:2px solid #5245ff;background:#1d4ed8;color:#fff;font-weight:700;cursor:pointer}
+.btn-outline{padding:.55rem .9rem;border-radius:8px;border:2px solid #0b0b0b;background:#ffffff;color:#1d4ed8;font-weight:700;cursor:pointer}
+.input-blue{padding:.6rem .75rem;border-radius:8px;border:2px solid #0c0c0c;background:#fff;color:#0b2e68}
