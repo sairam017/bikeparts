@@ -60,6 +60,7 @@ const LandingPage = () => {
         newPassword: profileNewPassword
       });
       setShowProfileModal(false);
+  navigate('/');
     } catch (err) {
       alert(err.response?.data?.message || err.message || 'Update failed');
     } finally {
@@ -167,6 +168,7 @@ const LandingPage = () => {
                 <div className="lp-user-dropdown" onMouseLeave={()=> setUserMenuOpen(false)}>
                   <button type="button" onClick={()=> {navigate(user.role === 'vendor' ? '/vendor/dashboard' : (user.role === 'admin' ? '/admin/dashboard' : '/')); setUserMenuOpen(false);}}>Dashboard</button>
                   <button type="button" onClick={()=> {navigate('/cart'); setUserMenuOpen(false);}}>Cart {totalItems ? `(${totalItems})` : ''}</button>
+                  <button type="button" onClick={()=> {navigate('/myorders'); setUserMenuOpen(false);}}>My Orders</button>
                   <button type="button" onClick={startEditProfile}>Update Profile</button>
                   <button type="button" onClick={()=> { logout(); setUserMenuOpen(false); }}>Logout</button>
                 </div>

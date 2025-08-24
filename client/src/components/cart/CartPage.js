@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useCart from '../../hooks/useCart';
 import useAuth from '../../hooks/useAuth';
 import bikePartsService from '../../services/bikePartsService';
+import api from '../../services/api';
 
 const CartPage = () => {
   // All hooks at top-level (no conditional returns before they are called)
@@ -108,6 +109,43 @@ const CartPage = () => {
 
   const total = cart.items.reduce((sum, i) => sum + (i.price * (i.qty || 1)), 0);
 
+  // New state for batch order placement
+  const [phone, setPhone] = useState('');
+  const [collectionDate, setCollectionDate] = useState('');
+  const [placing, setPlacing] = useState(false);
+  const [orderMsg, setOrderMsg] = useState(null);
+
+  const validatePhone = (p) => /^\d{10}$/.test(p); // simple 10 digit validation
+  const isFutureOrToday = (dStr) => {
+    if (!dStr) return false;
+    const sel = new Date(dStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return sel >= today;
+  };
+
+  const placeAll = async () => {
+    if (!user) { navigate('/auth'); return; }
+    setOrderMsg(null);
+    if (!cart.items.length) { setOrderMsg('Cart empty'); return; }
+    if (!validatePhone(phone)) { setOrderMsg('Enter valid 10 digit phone'); return; }
+    if (!isFutureOrToday(collectionDate)) { setOrderMsg('Select today or a future collection date'); return; }
+    try {
+      setPlacing(true);
+      const orderItems = cart.items.map(i => ({ name: i.name, qty: i.qty || 1, price: i.price, product: i.id }));
+      const shippingAddress = { address: 'Cart order' }; // minimal placeholder (could enhance with stored preferred address or geolocation)
+      const { data } = await api.post('/orders', { orderItems, shippingAddress, paymentMethod: 'cod', phone, collectionDate });
+      setOrderMsg('Order placed. ID: ' + data._id);
+      // Clear cart after success
+      clear();
+      setTimeout(()=> navigate('/'), 800);
+    } catch(e){
+      setOrderMsg(e.response?.data?.message || 'Order failed');
+    } finally {
+      setPlacing(false);
+    }
+  };
+
   // If context not ready, show lightweight placeholder while still keeping hook order stable
   if (!cartCtx) {
     return <div style={{padding:'1rem'}}>Loading cart...</div>;
@@ -115,7 +153,10 @@ const CartPage = () => {
 
   return (
     <div style={{ padding: '1rem', maxWidth: 900, margin: '0 auto' }}>
-  <h2>Cart</h2>
+  <div style={{display:'flex', alignItems:'center', gap:12}}>
+    <h2 style={{margin:0}}>Cart</h2>
+    <button onClick={()=> navigate('/myorders')} className="btn-outline" style={{marginLeft:'auto'}}>My Orders</button>
+  </div>
       {cart.items.length === 0 && <p style={{color:'#64748b'}}>Cart is empty <Link to="/">Go Back</Link></p>}
   <ul>
         {cart.items.map(i => (
@@ -128,6 +169,25 @@ const CartPage = () => {
   <h3>Total: {formatINR(total)}</h3>
       <button disabled={!cart.items.length} onClick={checkout}>Proceed To Checkout</button>
       <button disabled={!cart.items.length} onClick={clear} style={{ marginLeft: '0.5rem' }}>Clear</button>
+
+      {/* Batch place order section */}
+      {!!cart.items.length && (
+        <div style={{marginTop:'1.5rem', background:'#fff', padding:'1rem', borderRadius:12, boxShadow:'0 6px 18px rgba(2,6,23,.06)', display:'grid', gap:12}}>
+          <h3 style={{margin:0, fontSize:'1rem'}}>Place Order For All Items</h3>
+          <div style={{display:'flex', flexWrap:'wrap', gap:12}}>
+            <div style={{display:'flex', flexDirection:'column', gap:4}}>
+              <label style={{fontSize:12, fontWeight:600}}>Phone (10 digits)</label>
+              <input value={phone} onChange={e=> setPhone(e.target.value)} placeholder="Active phone" style={{padding:'6px 10px', border:'1px solid #cbd5e1', borderRadius:8}} maxLength={10} />
+            </div>
+            <div style={{display:'flex', flexDirection:'column', gap:4}}>
+              <label style={{fontSize:12, fontWeight:600}}>Collection Date</label>
+              <input type="date" value={collectionDate} onChange={e=> setCollectionDate(e.target.value)} style={{padding:'6px 10px', border:'1px solid #cbd5e1', borderRadius:8}} />
+            </div>
+          </div>
+          <button onClick={placeAll} disabled={placing} style={{padding:'8px 14px', borderRadius:8, border:'1px solid #1d4ed8', background:'#1d4ed8', color:'#fff', fontWeight:600}}>{placing? 'Placing...' : 'Place All Items (COD)'}</button>
+          {orderMsg && <div style={{fontSize:12, color: orderMsg.startsWith('Order placed') ? '#15803d' : '#b91c1c'}}>{orderMsg}</div>}
+        </div>
+      )}
 
       {/* Recommendations */}
       <div style={{marginTop:'2rem'}}>

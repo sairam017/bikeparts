@@ -17,6 +17,10 @@ const orderSchema = new mongoose.Schema({
     country: String
   },
   paymentMethod: String,
+  phone: { type: String },
+  collectionDate: { type: Date },
+  smsSentAt: { type: Date },
+  smsError: { type: String },
   isPaid: { type: Boolean, default: false },
   paidAt: Date,
   isDelivered: { type: Boolean, default: false },

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import bikePartsService from '../../services/bikePartsService';
 import api from '../../services/api';
 import useAuth from '../../hooks/useAuth';
@@ -158,6 +158,7 @@ const BikePartList = () => {
             const shippingAddress = userLoc ? { lat: userLoc.latitude, lng: userLoc.longitude } : { address: 'Unknown' };
             const { data: order } = await api.post('/orders', { orderItems, shippingAddress, paymentMethod: 'cod' });
             alert('Order placed (COD). Order ID: '+order._id);
+            window.location.href = '/';
         } catch(e){
             alert(e.response?.data?.message || 'Order failed');
         }
@@ -209,11 +210,13 @@ const BikePartList = () => {
                                     const highlight = part._id === prefShopProductId;
                                     return (
                                         <div key={part._id} className="part-card compact" style={highlight ? {outline:'2px solid #1d4ed8'} : {}}>
-                                            {part.images?.length ? (
-                                                <img alt={part.model || part.name || 'part'} src={ensureAbsolute(part.images[0])} style={{width:'100%', height:110, objectFit:'contain', background:'#f1f5f9', borderRadius:8}} />
-                                            ) : (
-                                                <div style={{width:'100%', height:110, background:'#f1f5f9', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:12}}>No Image</div>
-                                            )}
+                                            <Link to={`/product/${part._id}`} style={{display:'block'}}>
+                                                {part.images?.length ? (
+                                                    <img alt={part.model || part.name || 'part'} src={ensureAbsolute(part.images[0])} style={{width:'100%', height:110, objectFit:'contain', background:'#f1f5f9', borderRadius:8}} />
+                                                ) : (
+                                                    <div style={{width:'100%', height:110, background:'#f1f5f9', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:12}}>No Image</div>
+                                                )}
+                                            </Link>
                                             <h4 style={{marginTop:4, fontSize:'.7rem'}}>{part.name || part.model}</h4>
                                             <div className="part-meta" style={{fontSize:'.6rem'}}>{part.company ? part.company+' • ' : ''}{part.model || (part.type || 'Part')} <span className="part-price" style={{fontSize:'.5rem'}}>{formatINR(part.price)}</span></div>
                                             {part.description && (

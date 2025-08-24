@@ -398,8 +398,9 @@ const VendorDashboard = () => {
             setTimeout(()=> { partsSectionRef.current?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50);
           }}
     >Update Parts</button>
-        <div style={{marginLeft:'auto'}}>
-      <button onClick={() => navigate('/')} className="btn-outline" style={{marginRight:8}}>View Landing Page</button>
+        <div style={{marginLeft:'auto', display:'flex', gap:8}}>
+          <button onClick={() => navigate('/')} className="btn-outline">Landing</button>
+          <button onClick={() => navigate('/myorders')} className="btn-outline">My Orders</button>
           <button onClick={logout} className="btn-outline">Logout</button>
         </div>
       </div>

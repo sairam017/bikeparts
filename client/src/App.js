@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
 import { CartProvider } from './context/CartContext';
 import BikePartList from './components/bikeParts/BikePartList';
+import ProductDetailPage from './components/bikeParts/ProductDetailPage';
 import LandingPage from './components/landing/LandingPage';
 import AdminUsersPage from './components/admin/AdminUsersPage';
 import AdminProductsPage from './components/admin/AdminProductsPage';
@@ -13,6 +14,7 @@ import ShopsList from './components/shops/ShopsList';
 import CreateVendorPage from './components/admin/CreateVendorPage';
 import VendorDashboard from './components/vendor/VendorDashboard';
 import CartPage from './components/cart/CartPage';
+import MyOrdersPage from './components/checkout/MyOrdersPage';
 
 // Context-aware auth guard
 const RequireAuth = ({ children, roles }) => {
@@ -60,6 +62,7 @@ const NavBar = () => {
   <Link style={{color:'#fff'}} to="/">Home</Link>
   {location.pathname !== '/parts' && <Link style={{color:'#fff'}} to="/parts">Parts</Link>}
   {user && <Link style={{color:'#fff'}} to="/shops">Shops</Link>}
+  {user && <Link style={{color:'#fff'}} to="/myorders">My Orders</Link>}
       {user?.role === 'admin' && <Link style={{color:'#fff'}} to="/admin/dashboard">Admin</Link>}
       {user?.role === 'vendor' && <Link style={{color:'#fff'}} to="/vendor/dashboard">Vendor</Link>}
       {!user && <Link style={{marginLeft:'auto', color:'#fff'}} to="/login">Login</Link>}
@@ -78,6 +81,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/parts" element={<BikePartList />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/shops" element={<RequireAuth><ShopsList /></RequireAuth>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/admin/dashboard" element={<RequireAuth roles={['admin']}><AdminDashboard /></RequireAuth>} />
@@ -86,6 +90,7 @@ function App() {
             <Route path="/admin/products" element={<RequireAuth roles={['admin']}><AdminProductsPage /></RequireAuth>} />
             <Route path="/vendor/dashboard" element={<RequireAuth roles={['vendor','admin']}><VendorDashboard /></RequireAuth>} />
             <Route path="/cart" element={<RequireAuth><CartPage /></RequireAuth>} />
+            <Route path="/myorders" element={<RequireAuth><MyOrdersPage /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
