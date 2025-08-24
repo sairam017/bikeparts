@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const User = require('./models/User');
+const Shop = require('./models/Shop');
+const BikePart = require('./models/BikePart');
 
 async function ensureAdmin(){
   try {
@@ -30,7 +32,12 @@ async function ensureAdmin(){
 }
 
 dotenv.config();
-connectDB().then(()=> ensureAdmin());
+connectDB().then(async () => {
+  await ensureAdmin();
+  if (process.env.AUTO_SEED === 'true') {
+    await seedIfEmpty();
+  }
+});
 
 const app = express();
 
@@ -56,11 +63,64 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/shops', require('./routes/shopRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/meta', require('./routes/metaRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+
+// Debug DB stats (admin only)
+app.get('/api/debug/db-stats', require('./middleware/authMiddleware'), async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+  try {
+    const [userCount, shopCount, partCount] = await Promise.all([
+      User.countDocuments(), Shop.countDocuments(), BikePart.countDocuments()
+    ]);
+    res.json({ userCount, shopCount, partCount });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
 
 // Error middleware
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const BASE_PORT = parseInt(process.env.PORT, 10) || 5000;
+function start(port, attempt = 0) {
+  const server = app.listen(port, () => console.log(`Server running on port ${port}`));
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      if (attempt < 5) {
+        const nextPort = port + 1;
+        console.warn(`Port ${port} in use, retrying on ${nextPort} (attempt ${attempt + 1})`);
+        setTimeout(() => start(nextPort, attempt + 1), 250);
+      } else {
+        console.error(`Failed to bind after ${attempt + 1} attempts. Exiting.`);
+        process.exit(1);
+      }
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+  return server;
+}
+start(BASE_PORT);
+
+async function seedIfEmpty(){
+  try {
+    const partCount = await BikePart.countDocuments();
+    if (partCount > 0) return;
+    console.log('Seeding sample data (AUTO_SEED=true)...');
+    let vendor = await User.findOne({ email: 'vendor@example.com' });
+    if (!vendor) vendor = await User.create({ name: 'Sample Vendor', email: 'vendor@example.com', password: 'vendor123', role: 'vendor' });
+    let shop = await Shop.findOne({ vendor: vendor._id });
+    if (!shop) shop = await Shop.create({ name: 'Sample Shop', vendor: vendor._id, address: 'Test Address', location: { type: 'Point', coordinates: [77.5946, 12.9716] } });
+    await BikePart.insertMany([
+      { company: 'Hero', model: 'Splendor', brand: 'OEM', type: 'Engine', price: 1200, countInStock: 10, vendor: vendor._id, shop: shop._id, images: [], name: 'Hero Splendor Engine Part' },
+      { company: 'Bajaj', model: 'Pulsar 150', brand: 'Aftermarket', type: 'Body', price: 800, countInStock: 5, vendor: vendor._id, shop: shop._id, images: [], name: 'Pulsar 150 Body Panel' }
+    ]);
+    console.log('Sample data seeded');
+  } catch (e) {
+    console.error('Seeding failed:', e.message);
+  }
+}

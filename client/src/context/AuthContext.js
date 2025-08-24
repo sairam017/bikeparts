@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import authService from '../services/authService';
 import jwtDecode from 'jwt-decode';
 
 const AuthContext = createContext();
@@ -57,8 +58,25 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfile = async ({ name, email, currentPassword, newPassword }) => {
+    const payload = { name };
+    if (email) payload.email = email;
+    if (newPassword) {
+      payload.currentPassword = currentPassword;
+      payload.newPassword = newPassword;
+    }
+    const { data } = await authService.updateProfile(payload);
+    if (data?.token) {
+      localStorage.setItem('token', data.token);
+      applyToken(data.token);
+      const decoded = decodeTokenSafe(data.token);
+      setUser({ id: decoded.id, role: decoded.role, email: decoded.email, name: decoded.name });
+    }
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+  <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

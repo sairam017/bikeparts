@@ -1,8 +1,10 @@
 import api from './api';
 
-const getParts = (filters) => {
-    return api.get('/products', { params: filters });
-};
+const getParts = (filters) => api.get('/products', { params: filters });
+const getCompanies = () => api.get('/products/groups/companies');
+const getModelsByCompany = (company) => api.get('/products/groups/models', { params: { company } });
+const getBrands = () => api.get('/products/groups/brands');
+const getTypes = () => api.get('/products/groups/types');
 
 const getPartById = (id) => {
     return api.get(`/products/${id}`);
@@ -22,6 +24,10 @@ const deletePart = (id) => {
 
 const bikePartsService = {
     getParts,
+    getCompanies,
+    getModelsByCompany,
+    getBrands,
+    getTypes,
     getPartById,
     createPart,
     updatePart,

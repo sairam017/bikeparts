@@ -43,4 +43,22 @@ router.post('/vendors/create', async (req, res) => {
   }
 });
 
+// Reset a user's password (admin only)
+router.post('/users/reset-password', async (req, res) => {
+  try {
+    const { email, id, password } = req.body;
+    if (!password || password.length < 4) return res.status(400).json({ message: 'Password too short' });
+    let user;
+    if (id) user = await User.findById(id);
+    else if (email) user = await User.findOne({ email: String(email).trim().toLowerCase() });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.password = password; // will be hashed by pre-save hook
+    await user.save();
+    res.json({ message: 'Password updated' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

@@ -15,9 +15,8 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      if (user.role === 'admin') navigate('/admin/dashboard', { replace: true });
-      else if (user.role === 'vendor') navigate('/vendor/dashboard', { replace: true });
-      else navigate('/customer/dashboard', { replace: true });
+      // Redirect all roles to home with welcome flag
+      navigate(`/?welcome=1`, { replace: true });
     }
   }, [user, loading, navigate]);
 

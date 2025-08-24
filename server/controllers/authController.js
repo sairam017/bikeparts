@@ -11,6 +11,7 @@ const genToken = (user) => {
 exports.register = async (req, res) => {
   try {
     let { name, email, password, role } = req.body;
+    email = String(email || '').trim().toLowerCase();
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'User already exists' });
 
@@ -35,13 +36,55 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const { password } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
     const match = await user.matchPassword(password);
     if (!match) return res.status(400).json({ message: 'Invalid credentials' });
     const token = genToken(user);
     res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update profile: supports name, email, password changes.
+// For changing email or password, require currentPassword verification.
+// Body: { name?, email?, currentPassword?, newPassword? }
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, email, currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let needPasswordCheck = false;
+    if (typeof email === 'string' && email.trim().toLowerCase() !== user.email) needPasswordCheck = true;
+    if (newPassword) needPasswordCheck = true;
+
+    if (needPasswordCheck) {
+      if (!currentPassword) return res.status(400).json({ message: 'Current password required' });
+      const ok = await user.matchPassword(currentPassword);
+      if (!ok) return res.status(400).json({ message: 'Current password incorrect' });
+    }
+
+    if (name) user.name = name;
+    if (typeof email === 'string' && email.trim().toLowerCase() !== user.email) {
+      const newEmail = email.trim().toLowerCase();
+      const taken = await User.findOne({ email: newEmail, _id: { $ne: user._id } });
+      if (taken) return res.status(400).json({ message: 'Email already in use' });
+      user.email = newEmail;
+    }
+    if (newPassword) user.password = newPassword; // will hash via pre-save
+
+    await user.save();
+    const token = genToken(user);
+    res.json({
+      message: 'Profile updated',
       token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });

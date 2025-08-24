@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
+const { register, login, updateProfile } = require('../controllers/authController');
 const auth = require('../middleware/authMiddleware');
 
 // @route   POST api/auth/register
@@ -19,5 +19,8 @@ router.post('/admin/create', auth, (req, res, next) => {
 // @desc    Authenticate user & get token
 // @access  Public
 router.post('/login', login);
+
+// Authenticated user profile update
+router.put('/profile', auth, updateProfile);
 
 module.exports = router;

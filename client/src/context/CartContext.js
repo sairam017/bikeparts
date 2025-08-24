@@ -1,4 +1,5 @@
 import React, { createContext, useReducer, useEffect } from 'react';
+import jwtDecode from 'jwt-decode';
 
 const CartContext = createContext();
 
@@ -32,14 +33,42 @@ const cartReducer = (state, action) => {
 
 const initial = { items: [] };
 
+// Helper to get current user id from stored token (avoid circular auth import)
+const currentUserId = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try { const d = jwtDecode(token); return d.id; } catch { return null; }
+};
+
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initial, () => {
-    const stored = localStorage.getItem('cart');
-    return stored ? JSON.parse(stored) : initial;
+    const uid = currentUserId();
+    if (!uid) {
+      // keep anonymous cart under generic key
+      const anon = localStorage.getItem('cart');
+      return anon ? JSON.parse(anon) : initial;
+    }
+    const storedMapRaw = localStorage.getItem('userCarts');
+    if (storedMapRaw) {
+      try {
+        const obj = JSON.parse(storedMapRaw);
+        if (obj && obj[uid]) return obj[uid];
+      } catch { /* ignore */ }
+    }
+    return initial;
   });
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state));
+    const uid = currentUserId();
+    if (!uid) {
+      localStorage.setItem('cart', JSON.stringify(state));
+      return;
+    }
+    const raw = localStorage.getItem('userCarts');
+    let map = {};
+    if (raw) { try { map = JSON.parse(raw) || {}; } catch { map = {}; } }
+    map[uid] = state;
+    localStorage.setItem('userCarts', JSON.stringify(map));
   }, [state]);
 
   const totalItems = state.items.reduce((s,i)=> s + (i.qty || 1), 0);
